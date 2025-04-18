@@ -71,7 +71,7 @@ void InitHooks(bool abGECK) {
 EXTERN_DLL_EXPORT bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info) {
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "LOD Flicker Fix";
-	info->version = 100;
+	info->version = 110;
 	return true;
 }
 
