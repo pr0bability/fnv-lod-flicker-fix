@@ -29,6 +29,19 @@ public:
 	}
 };
 
+
+static uint32_t uiOrthoReturnAddr = 0xE6CB0A;
+void __declspec(naked) OrthoHook() {
+	__asm {
+		fchs							// fInv = -fInv (turn fInv into negative)
+		fst     dword ptr[esi + 0x9E8]  // m_kD3DProj._33 = fInv
+		fchs							// fInv = -fInv (turn fInv back into positive)
+		fmul    dword ptr[edi + 0x14]	// fInv * kFrustum.m_fFar
+		fstp    dword ptr[esi + 0x9F8]	// m_kD3DProj._43 = result of above
+		jmp		uiOrthoReturnAddr
+	}
+}
+
 void InitHooks(bool abGECK) {
 	SafeWrite8((abGECK ? 0xC06383 : 0xE6B9B3) + 1, 0xEE); // Set Z clear value to 0
 	SafeWrite32((abGECK ? 0x8F8892 : 0xB4F932) + 2, (uint32_t)&fDepthBias); // Set depth bias to 0.00002
@@ -47,6 +60,11 @@ void InitHooks(bool abGECK) {
 	// m_kD3DProj._33 = -(kFrustum.m_fNear * fInvFmN);
 	// m_kD3DProj._43 = kFrustum.m_fNear * kFrustum.m_fFar * fInvFmN;
 	SafeWriteBuf(abGECK ? 0xC07587 : 0xE6CBB7, "\xD8\x4F\x10\xD9\xE0\xD9\x9E\xE8\x09\x00\x00\xD9\x47\x10\xD8\x4F\x14\xDE\xC9", 19);
+
+	// Same thing, but for orthographic projection.
+	WriteRelJump(abGECK ? 0xC074C9 : 0xE6CAF9, OrthoHook);
+	if (abGECK)
+		uiOrthoReturnAddr = 0xC074DA;
 }
 
 
